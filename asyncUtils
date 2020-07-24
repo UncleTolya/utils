@@ -1,0 +1,35 @@
+export async function asyncSome<T>(
+	array: T[],
+	callback: (item: T) => Promise<boolean>,
+	index: number = 0,
+): Promise<boolean> {
+	const item = array[index];
+	if (!item) {
+		return Promise.resolve(false);
+	}
+	if (await callback(item)) {
+		return Promise.resolve(true);
+	}
+	return asyncSome(
+		array,
+		callback,
+		index + 1,
+	);
+}
+
+export async function asyncForEachSeries<T, TResponse>(array: T[], callback: (item: T, i: number) => Promise<TResponse>): Promise<TResponse[]> {
+	const results: TResponse[] = [];
+	for (let i = 0; i < array.length; i++) {
+		const result = await callback(array[i], i);
+		results.push(result);
+	}
+	return results;
+}
+
+export function asyncForEachParallel<T, TResponse>(array: Iterable<T>, callback: (item: T) => Promise<TResponse>): Promise<TResponse[]> {
+	const promises: Array<Promise<TResponse>> = [];
+	for (const item of array) {
+		promises.push(callback(item));
+	}
+	return Promise.all(promises);
+}
